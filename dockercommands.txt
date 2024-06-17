@@ -1,0 +1,166 @@
+docker ps =  list all docker containers running
+docker images = list all docker images
+docker pull postgres:16-alpine =  // pull postgress alppine image where the image is postgress and tag is alpine
+
+// run a postgress instance in docker
+docker run --name postgres -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 postgres:16-alpine
+ -e flag == tells docker to set an environment variable
+ -d flag == tells docker to run the container in the background
+ postgress  = is the name of the container
+ -p 5432:5432 == tells docker to map the port 5432 from the container to the port 5432 on the host machine
+
+ // to use interact with psql in docker use the command below
+ docker exec -it postgres16 psql -U postgres #where postgres16 is the name of teh container
+
+ // exit the psql terminal use the command below
+ \q
+
+ // see logs of a docker container
+ docker logs postgres16 # where postgres16 is the name of the container or id
+
+ // stop a container from running
+ docker stop postgres16 # where postgres16 is the name of the container or id
+
+ // create db from the terminal
+docker exec -it postgres16 createdb --username=postgres --owner=postgres todo
+# where todo is the name of the db
+
+// access it using th exec -it
+docker exec -it postgres16 psql -U postgres databas_name
+
+// drop a database
+docker exec -it postgres16 dropdb --username=postgres todo
+
+// make migrations 
+
+migrate -path db/migrations -database "postgresql://postgres:Mwag9836@localhost:5432/simple_bank?sslmode=disable" -verbose up
+
+// to install any dependancies use
+
+go mod tidy
+
+// ACID
+Atomicity - all or nothing , Its either a successful or  fail and db is unchanged
+Consistency - database is consistent , db state remains valid n all contraints are satisfield
+Isolation - concurrent transactions are isolated
+Durability - once committed, data is kept
+
+
+// blocking transactions in sql
+
+// to block a transaction 
+BEGIN; // start a transaction
+SELECT * FROM accounts WHERE id = 1 FOR UPDATE; // select the row for update
+UPDATE accounts SET balance = balance - 100 WHERE id = 1; // update the row
+COMMIT; // commit the transaction
+
+
+// example queries to cause  a deadlock after running concurrently
+
+BEGIN;
+
+UPDATE accounts SET balance = balance - 10 WHERE id = 1 RETURNING *; // returns 90
+UPDATE accounts SET balance = balance + 10 WHERE id = 2 RETURNING *; // returns 110
+
+ROLLBACK;
+
+BEGIN;
+
+UPDATE accounts SET balance = balance - 10 WHERE id = 2 RETURNING *; // returns 110
+UPDATE accounts SET balance = balance + 10 WHERE id = 1 RETURNING *; // returns 90
+
+ROLLBACK;
+
+// to see the locks in postgres
+
+SELECT * FROM pg_locks WHERE NOT GRANTED;
+
+// to see the process id of the current transaction
+
+SELECT * FROM pg_stat_activity WHERE pid = <pid>; // where pid is the process id ie 503 ,5034 ect
+
+// running tha above queries concureently will cause a deadlock 
+
+// to resolve a deadlock
+
+BEGIN;
+
+UPDATE accounts SET balance = balance - 10 WHERE id = 1 RETURNING *; // returns 90
+UPDATE accounts SET balance = balance + 10 WHERE id = 2 RETURNING *; // returns 110
+
+COMMIT; // commit the transaction
+
+BEGIN; // start a new transaction
+
+UPDATE accounts SET balance = balance - 10 WHERE id = 2 RETURNING *; // returns 90
+UPDATE accounts SET balance = balance + 10 WHERE id = 1 RETURNING *; // returns 110
+
+COMMIT; // commit the transaction
+
+// levels of deadlock (locks in postgres)
+
+// 1. AccessShareLock -->
+
+thats the lowest level of lock and its used for read only operations
+SELECT * FROM accounts WHERE id = 1; // this will acquire an AccessShareLock
+
+// 2. RowShareLock -->
+
+thats the second lowest level of lock and its used for read only operations
+SELECT * FROM accounts WHERE id = 1 FOR SHARE; // this will acquire an RowShareLock
+
+// 3. RowExclusiveLock -->
+
+thats the third lowest level of lock and its used for write operations
+SELECT * FROM accounts WHERE id = 1 FOR UPDATE; // this will acquire an RowExclusiveLock
+UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an RowExclusiveLock
+
+// 4. ShareUpdateExclusiveLock -->
+
+thats the fourth lowest level of lock and its used for write operations
+SELECT * FROM accounts WHERE id = 1 FOR SHARE; // this will acquire an ShareUpdateExclusiveLock
+UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an ShareUpdateExclusiveLock
+
+
+// 5. ShareLock -->
+
+thats the fifth lowest level of lock and its used for write operations
+SELECT * FROM accounts WHERE id = 1 FOR SHARE; // this will acquire an ShareLock
+UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an ShareLock
+
+// 6. ExclusiveLock -->
+
+thats the sixth lowest level of lock and its used for write operations
+SELECT * FROM accounts WHERE id = 1 FOR SHARE; // this will acquire an ExclusiveLock
+UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an ExclusiveLock
+
+// 7. AccessExclusiveLock -->
+
+thats the highest level of lock and its used for write operations
+SELECT * FROM accounts WHERE id = 1 FOR SHARE; // this will acquire an AccessExclusiveLock
+UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an AccessExclusiveLock
+
+// Minimizing locks when doing queries
+
+1. Use the lowest level of lock possible ie AccessShareLock 
+2. Use the lowest level of isolation possible i.e Read Committed
+3. Use the lowest level of transaction possible i.e use transactions only when necessary
+4. Use the lowest level of lock timeout possible i.e use lock timeout only when necessary
+5. Use the lowest level of statement timeout possible i.e use statement timeout only when necessary
+6. Use the lowest level of row limit possible i.e use row limit only when necessary
+7. Use the lowest level of row offset possible i.e use row offset only when necessary
+8. Use the lowest level of row ordering possible i.e use row ordering only when necessary
+9. Use the lowest level of row filtering possible i.e use row filtering only when necessary
+10. Use the lowest level of row joining possible i.e use row joining only when necessary
+11. Use the lowest level of row grouping possible i.e use row grouping only when necessary
+12. Use the lowest level of row aggregation possible i.e use row aggregation only when necessary
+
+
+// isolations levels
+
+
+
+
+// mysqli connetion
+
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql:8.0.26

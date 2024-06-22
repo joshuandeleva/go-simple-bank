@@ -41,7 +41,8 @@ jobs:
     - name: Install golang migate tool and add to path
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.darwin-amd64.tar.gz | tar xvz
-        sudo mv migrate /usr/bin/
+        sudo mv migrate /usr/local/bin/
+        chmod +x /usr/local/bin/migrate
         which migrate
 
     - name: Run migarations

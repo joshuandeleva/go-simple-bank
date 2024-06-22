@@ -40,10 +40,8 @@ jobs:
 
     - name: Install golang migate tool and add to path
       run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz -o migrate.tar.gz
-        tar xvzf migrate.tar.gz
-        sudo mv migrate.linux-amd64 /usr/local/bin/migrate
-        sudo chmod +x /usr/local/bin/migrate
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate.linux-amd64 /usr/bin/
         which migrate
 
     - name: Run migarations

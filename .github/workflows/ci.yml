@@ -38,6 +38,10 @@ jobs:
     - name: Checkout our code to go module directory
       uses: actions/checkout@v4
 
+    - name: Install golang migate tool and add to path
+      run: |
+        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.darwin-amd64.tar.gz | tar xvz
+
     - name: Run migarations
       run: make migrateup
 

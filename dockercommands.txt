@@ -164,3 +164,17 @@ UPDATE accounts SET balance = balance - 10 WHERE id = 1; // this will acquire an
 // mysqli connetion
 
 docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql:8.0.26
+
+
+// why mock database
+
+1. Speed up tests
+2. Test edge cases with 100% code coverage
+3. Indepedent tests since it isolates test data to avoid conflicts
+4. Test code that interacts with database
+
+// implement mock database
+
+1. Create a mock database (fake db)
+2. Create a mock database connection
+3 . use db stubs :go-sqlmock/ gomock

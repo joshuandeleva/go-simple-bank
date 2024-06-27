@@ -1,9 +1,3 @@
-CREATE TYPE "Currency" AS ENUM (
-  'USD',
-  'EUR',
-  'KSH'
-);
-
 CREATE TABLE "account" (
   "id" bigserial PRIMARY KEY,
   "owner" varchar NOT NULL,
@@ -27,6 +21,7 @@ CREATE TABLE "transfers" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+
 CREATE INDEX ON "account" ("owner");
 
 CREATE INDEX ON "enteries" ("account_id");
@@ -46,3 +41,4 @@ ALTER TABLE "enteries" ADD FOREIGN KEY ("account_id") REFERENCES "account" ("id"
 ALTER TABLE "transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "account" ("id");
 
 ALTER TABLE "transfers" ADD FOREIGN KEY ("to_account_id") REFERENCES "account" ("id");
+

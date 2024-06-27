@@ -178,3 +178,14 @@ docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql:8.0.26
 1. Create a mock database (fake db)
 2. Create a mock database connection
 3 . use db stubs :go-sqlmock/ gomock
+
+
+// create a migrations use migrate
+
+migrate create -ext sql -dir db/migrations -seq add_users
+
+ALTER TABLE IF EXISTS "account" DROP CONSTRAINT IF EXISTS "owner_currency_key";
+
+ALTER TABLE IF EXISTS "account" DROP CONSTRAINT IF EXISTS "accounts_owner_fkey";
+
+DROP TABLE IF EXISTS users;

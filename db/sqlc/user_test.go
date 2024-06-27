@@ -1,4 +1,5 @@
 package db
+
 import (
 	"context"
 	"testing"
@@ -14,9 +15,11 @@ func TestCreateUser(t *testing.T) {
 }
 
 func createARandomUser(t *testing.T) User {
+	hashedPassword, err := util.HashPassword(util.RandomString(10))
+	require.NoError(t, err) // checks if there is no error
 	arg := CreateUserParams{
 		Username: util.RandomOwner(),
-		HashedPassword: "secret",
+		HashedPassword: hashedPassword,
 		FullName: util.RandomOwner(),
 		Email: util.RandomEamil(),
 		

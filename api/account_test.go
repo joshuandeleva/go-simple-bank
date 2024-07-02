@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/joshuandeleva/simplebank/db/mock"
 	db "github.com/joshuandeleva/simplebank/db/sqlc"
+	"github.com/joshuandeleva/simplebank/token"
 	"github.com/joshuandeleva/simplebank/util"
 	"github.com/stretchr/testify/require"
 )
@@ -26,12 +28,16 @@ func TestGetAccount(t *testing.T) {
 	testCases := []struct {
 		name          string
 		accountID     int64
+		setupAuthFunc func(t *testing.T, request *http.Request , tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)                           // build stubs
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder) // check response
 	}{
 		{
 			name:      "OK",
 			accountID: account.ID,
+			setupAuthFunc: func(t *testing.T, request *http.Request , tokenMaker token.Maker) {
+				addAuthorizationHeader(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Times(1).Return(account, nil)
 			},
@@ -44,6 +50,9 @@ func TestGetAccount(t *testing.T) {
 		{
 			name:      "NotFound",
 			accountID: account.ID,
+			setupAuthFunc: func(t *testing.T, request *http.Request , tokenMaker token.Maker) {
+				addAuthorizationHeader(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 						GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -57,6 +66,9 @@ func TestGetAccount(t *testing.T) {
 		{
 			name:      "InternalError",
 			accountID: account.ID,
+			setupAuthFunc: func(t *testing.T, request *http.Request , tokenMaker token.Maker) {
+				addAuthorizationHeader(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 						GetAccount(gomock.Any(), gomock.Eq(account.ID)).
@@ -70,6 +82,9 @@ func TestGetAccount(t *testing.T) {
 		{
 			name:      "InvalidID",
 			accountID: 0,
+			setupAuthFunc: func(t *testing.T, request *http.Request , tokenMaker token.Maker) {
+				addAuthorizationHeader(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 						GetAccount(gomock.Any() , gomock.Any()).
@@ -98,6 +113,7 @@ func TestGetAccount(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			tc.setupAuthFunc(t, request, server.tokenMaker) // add authorization header to request
 			server.router.ServeHTTP(recorder, request) // send request to server
 			tc.checkResponse(t, recorder)              // check response
 		})

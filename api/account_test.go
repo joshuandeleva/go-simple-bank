@@ -48,6 +48,36 @@ func TestGetAccount(t *testing.T) {
 			},
 		},
 		{
+			name: "Unauthorized",
+			accountID: account.ID,
+			setupAuthFunc: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationHeader(t, request, tokenMaker, authorizationTypeBearer, "unauthorized_user", time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(account, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "NoAuthorization",
+			accountID: account.ID,
+			setupAuthFunc: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+				GetAccount(gomock.Any(),gomock.Any()).
+				Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name:      "NotFound",
 			accountID: account.ID,
 			setupAuthFunc: func(t *testing.T, request *http.Request , tokenMaker token.Maker) {
@@ -124,7 +154,7 @@ func TestGetAccount(t *testing.T) {
 func randomAccount(owner string) db.Account {
 	return db.Account{
 		ID:       util.RandomInt(1, 1000),
-		Owner:    util.RandomOwner(),
+		Owner:    owner,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}

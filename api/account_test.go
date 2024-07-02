@@ -18,7 +18,8 @@ import (
 )
 
 func TestGetAccount(t *testing.T) {
-	account := randomAccount()
+	user, _ := randomUser(t)
+	account := randomAccount(user.Username)
 
 	// test cases
 
@@ -90,7 +91,7 @@ func TestGetAccount(t *testing.T) {
 			tc.buildStubs(store)               // build stubs
 
 			// start a test server and send request
-			server := NewServer(store)         // create a new server
+			server := newTestServer(t,store)         // create a new server
 			recorder := httptest.NewRecorder() // create a new recorder
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
 
@@ -104,7 +105,7 @@ func TestGetAccount(t *testing.T) {
 
 }
 
-func randomAccount() db.Account {
+func randomAccount(owner string) db.Account {
 	return db.Account{
 		ID:       util.RandomInt(1, 1000),
 		Owner:    util.RandomOwner(),

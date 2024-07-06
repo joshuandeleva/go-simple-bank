@@ -189,3 +189,36 @@ ALTER TABLE IF EXISTS "account" DROP CONSTRAINT IF EXISTS "owner_currency_key";
 ALTER TABLE IF EXISTS "account" DROP CONSTRAINT IF EXISTS "accounts_owner_fkey";
 
 DROP TABLE IF EXISTS users; 
+
+// build a docker image
+docker build -t simple-bank .
+
+// to run the generated image
+docker run --name simplebank -p 8000:8000 simplebank:latest
+
+// rm  a docker image by image id
+docker rmi simplebank:latest
+
+// to see all docker images
+
+docker images
+
+// to see all docker containers
+docker ps -a
+
+
+//inspect a container
+docker container inspect simplebank
+
+// to change the postgres connection and use the ip of the network in docker without rebuilding the image
+docker run --name simplebank -p 8000:8000 -e POSTGRES_HOST=172.17.0.1 simplebank:latest
+
+// see network in docker // 172.18.0.2
+docker network ls
+
+// connect a network to a container
+docker network connect simplebank simplebank
+
+// run on a given network
+
+docker run --name simplebank --network bank-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE="postgresql://postgres:Mwag9836@localhost:5432/simple_bank?sslmode=disable" simple-bank:latest

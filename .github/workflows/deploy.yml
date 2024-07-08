@@ -1,0 +1,54 @@
+name: Run unit tests
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # Service containers to run with `container-job`
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: Mwag9836
+          POSTGRES_USER: postgres
+          POSTGRES_DB: simple_bank
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    strategy:
+      matrix:
+        go-version: [1.21.x, 1.22.x]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout our code to go module directory
+        uses: actions/checkout@v4
+
+      - name: Install golang migrate tool and add to path
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin/
+          which migrate
+
+      - name: Run migarations
+        run: make migrateup
+
+      # - name: Build
+      #   run: go build -v ./...
+
+      - name: Test
+        run: make tests

@@ -213,6 +213,11 @@ docker container inspect simplebank
 // to change the postgres connection and use the ip of the network in docker without rebuilding the image
 docker run --name simplebank -p 8000:8000 -e POSTGRES_HOST=172.17.0.1 simplebank:latest
 
+// make a file exceutable
+
+chmod +x start.sh
+
+
 // see network in docker // 172.18.0.2
 docker network ls
 
@@ -222,3 +227,7 @@ docker network connect simplebank simplebank
 // run on a given network
 
 docker run --name simplebank --network bank-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE="postgresql://postgres:Mwag9836@localhost:5432/simple_bank?sslmode=disable" simple-bank:latest
+
+// remove all existing containers
+
+docker compose down

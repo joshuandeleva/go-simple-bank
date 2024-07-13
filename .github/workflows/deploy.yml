@@ -1,54 +1,31 @@
-name: Run unit tests
+name: Deploy to production
 
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
 
-  test:
-    name: Test
+  build:
+    name: Build docker image
     runs-on: ubuntu-latest
-    # Service containers to run with `container-job`
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: Mwag9836
-          POSTGRES_USER: postgres
-          POSTGRES_DB: simple_bank
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    strategy:
-      matrix:
-        go-version: [1.21.x, 1.22.x]
+
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          go-version: ${{ matrix.go-version }}
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Checkout our code to go module directory
-        uses: actions/checkout@v4
-
-      - name: Install golang migrate tool and add to path
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: simple-bank
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/bin/
-          which migrate
-
-      - name: Run migarations
-        run: make migrateup
-
-      # - name: Build
-      #   run: go build -v ./...
-
-      - name: Test
-        run: make tests
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG

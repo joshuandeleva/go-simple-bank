@@ -231,3 +231,25 @@ docker run --name simplebank --network bank-network -p 8080:8080 -e GIN_MODE=rel
 // remove all existing containers
 
 docker compose down
+
+// postgresql://postgres:Mwag9836@localhost:5432/simple_bank?sslmode=disable
+
+//view aws config files
+
+ls -l ~/.aws
+
+// see all the aws profile from terminal
+
+cat ~/.aws/credentials
+
+// read config profile
+cat ~/.aws/config
+
+// get the secrets from aws
+aws secretsmanager get-secret-value --secret-id simple-bank --query SecretString --output text
+
+// use the jq package to transaform to a .env format
+aws secretsmanager get-secret-value --secret-id simple-bank --query SecretString --output text | jq 'to_entries|map("\(.key)=\(.value)")'
+
+// use the jq package to transaform to a .env format
+aws secretsmanager get-secret-value --secret-id simple-bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
